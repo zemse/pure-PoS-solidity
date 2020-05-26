@@ -14,8 +14,18 @@ const stakingJSON = require('../../build/Staking_Staking.json');
 /// @dev initialize file level global variables, you can also register it global.ts if needed across files.
 let stakingInstance: ethers.Contract;
 
-const stakingAmount: ethers.BigNumber = ethers.utils.parseEther('20');
-const NUMBER_OF_STAKINGS = 10;
+const stakingCases: [number, ethers.BigNumber][] = [
+  [0, ethers.utils.parseEther('10')],
+  [1, ethers.utils.parseEther('10')],
+  [2, ethers.utils.parseEther('10')],
+  [3, ethers.utils.parseEther('10')],
+  [4, ethers.utils.parseEther('20')],
+  [5, ethers.utils.parseEther('20')],
+  [6, ethers.utils.parseEther('25')],
+  [7, ethers.utils.parseEther('25')],
+  [8, ethers.utils.parseEther('50')],
+  [9, ethers.utils.parseEther('50')],
+];
 
 const TRIALS = 50;
 let trialCount = 0;
@@ -41,15 +51,17 @@ export const StakingContract = () =>
     });
 
     describe('Staking Functionality', async () => {
-      [...Array(NUMBER_OF_STAKINGS).keys()].forEach((i) => {
+      stakingCases.forEach((entry, i) => {
+        const [accountId, stakingAmount] = entry;
         it(`stake ${ethers.utils.formatEther(
           stakingAmount
         )} ETH from Account ${i} in the contract`, async () => {
           const _stakingInstance = stakingInstance.connect(
-            global.provider.getSigner(global.accounts[i])
+            global.provider.getSigner(global.accounts[accountId])
           );
           await _stakingInstance.functions.stake({
             value: stakingAmount,
+            gasPrice: 0,
           });
 
           /// @dev now get the value at storage
@@ -65,7 +77,7 @@ export const StakingContract = () =>
 
       it('number of stakings should be correct', async () => {
         const stakings = await stakingInstance.functions.getAllStakes();
-        assert.strictEqual(stakings.length, NUMBER_OF_STAKINGS);
+        assert.strictEqual(stakings.length, stakingCases.length);
       });
     });
 
@@ -98,7 +110,7 @@ export const StakingContract = () =>
       });
 
       [...Array(10).keys()].forEach((testNumber) => {
-        it(`calling updateValidators 100 times`, async () => {
+        it(`calling updateValidators ${TRIALS} times`, async () => {
           await stakingInstance.functions.updateValidators();
           // Object.values(chanceCount).forEach((val) => {
           //   if (val) val[0] = 0;
@@ -123,15 +135,21 @@ export const StakingContract = () =>
           // Printing results
           console.log(`Trials until now: ${trialCount}`);
           Object.entries(chanceCount).forEach((entry) => {
+            const accountId = global.accounts.indexOf(entry[0]);
+            const accountTestCase = stakingCases.find(
+              (entry) => entry[0] === accountId
+            );
+            const stakingAmount = ethers.utils.formatEther(
+              accountTestCase ? accountTestCase[1] : ethers.constants.Zero
+            );
             console.log(
-              `${entry[0]}: ${entry[1].join(' ')} = ${entry[1].reduce(
-                (total, num) => total + num,
-                0
-              )}`
+              `${stakingAmount}ETH ${entry[0]}: ${entry[1].join(
+                ' '
+              )} = ${entry[1].reduce((total, num) => total + num, 0)}`
             );
           });
 
-          const lastValidatorUpdatedBlock = await stakingInstance.functions.astValidatorUpdatedBlock();
+          const lastValidatorUpdatedBlock = await stakingInstance.functions.lastValidatorUpdatedBlock();
           const currentBlock = await global.provider.getBlockNumber();
           assert.ok(
             lastValidatorUpdatedBlock.eq(currentBlock),
