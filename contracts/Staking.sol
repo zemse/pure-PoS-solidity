@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.6.8;
+pragma experimental ABIEncoderV2;
 
 contract Staking {
   struct Stake {
@@ -31,6 +32,14 @@ contract Staking {
     totalAdjusted += _adjusted;
 
     emit StakeAdded(_stakeId);
+  }
+
+  function getAllStakes() public view returns(Stake[] memory) {
+    return stakes;
+  }
+
+  function randomNumber(uint256 _seed) public view returns (uint256) {
+    return uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), _seed))) % stakes.length;
   }
 
   function adjust(uint256 _amount) public pure returns (uint256) {
