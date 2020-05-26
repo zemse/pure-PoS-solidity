@@ -13,6 +13,10 @@ contract Staking {
   Stake[] public stakes;
   uint256 public totalAdjusted;
 
+  uint256 public lastValidatorUpdatedBlock;
+  uint256 public blocksInterval = 1;
+  address[5] public validatorSet;
+
   event StakeAdded(uint256 _id);
 
   function stake() public payable {
@@ -34,12 +38,41 @@ contract Staking {
     emit StakeAdded(_stakeId);
   }
 
+  function updateValidators() public {
+    require(blocksInterval + lastValidatorUpdatedBlock <= block.number, 'cannot update validators too early');
+
+    address[5] memory _newValidatorSet;
+
+    for(uint256 i = 0; i < 5; i++) {
+      _newValidatorSet[i] = stakes[getRandomValidator(i)].staker;
+    }
+
+    validatorSet = _newValidatorSet;
+    lastValidatorUpdatedBlock = block.number;
+  }
+
+  function getRandomValidator(uint256 _seed) public view returns (uint256) {
+    int256 _luckyStake = int256(randomNumber(_seed) % totalAdjusted);
+
+    uint256 i = 0;
+    while(_luckyStake > 0) {
+      _luckyStake -= int256(stakes[i].adjusted);
+      i++;
+    }
+
+    return i - 1;
+  }
+
   function getAllStakes() public view returns(Stake[] memory) {
     return stakes;
   }
 
+  function getAllValidators() public view returns(address[5] memory) {
+    return validatorSet;
+  }
+
   function randomNumber(uint256 _seed) public view returns (uint256) {
-    return uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), _seed))) % stakes.length;
+    return uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), _seed)));
   }
 
   function adjust(uint256 _amount) public pure returns (uint256) {
