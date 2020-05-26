@@ -35,7 +35,7 @@ export const StakingContract = () =>
 
     describe('Staking Functionality', async () => {
       /// @dev this is first test case of this collection
-      it('should change storage value to a new value', async () => {
+      it('stake ETH in the contract', async () => {
         await stakingInstance.functions.stake({
           value: ethers.utils.parseEther('1'),
         });
