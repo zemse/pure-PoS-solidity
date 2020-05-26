@@ -1,25 +1,42 @@
-This project was bootstrapped with [Create Solidity Project](https://github.com/zemse/create-solidity-project/).
+# Pure PoS Solidity
 
-## Available Scripts
+This is an experimental smart contract logic that governs the selection of new validators based on Proof of Stake (PoS). Also, to discourage pools with extremely high stake and encourage split into more nodes, a quadratic power adjustment is to be used.
 
-In the project directory, you can run:
+> Note: This experiment is a work in progress and it is advised to not use these logics in production without a reliable audit.
 
-### `npm run test`
+Ongoing research work on this experiment is carried out in this repository's [issues](https://github.com/zemse/pure-PoS-solidity/issues).
 
-Initially it compiles your contracts and places them in a `build` folder. This step is skipped if no changes are made in the contracts source codes. Then it runs your typescript test suite.
+## Test Results in Brief
 
-### `npm run compile`
+These tests can be used to better judge the PoS performance of the smart contract logic.
 
-It simply compiles your contracts and places them in the build folder.
+Situations in this test case:
 
-## Useful links
+- `10` ganache wallets are used
+- Validator set of length `5`
+- `500` validator sets are generated (`500 x 5 = 2500`)
+- Entropy is dependent on previous block hash.
 
-- [Solidity Documentation](https://solidity.readthedocs.io/en/v0.6.3/).
-- [Ethers.js Documentation](https://docs.ethers.io/ethers.js/html/).
-- [Mocha Documentation](https://devdocs.io/mocha-api/).
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/home).
+| Wallet     | Stake (`ETH`) | % Stake | Blocks Mined | % Result |
+| ---------- | ------------- | ------- | ------------ | -------- |
+| `0xc5..7D` | 50.0          | 21.7%   | 557          | 22.28%   |
+| `0x45..84` | 50.0          | 21.7%   | 518          | 20.72%   |
+| `0x34..5d` | 25.0          | 10.8%   | 289          | 11.56%   |
+| `0x0F..8d` | 25.0          | 10.8%   | 270          | 10.80%   |
+| `0x02..09` | 20.0          | 8.6%    | 220          | 8.88%    |
+| `0xB5..75` | 20.0          | 8.6%    | 205          | 8.20%    |
+| `0x89..F7` | 10.0          | 4.3%    | 124          | 4.96%    |
+| `0xB5..75` | 10.0          | 4.3%    | 111          | 4.44%    |
+| `0xCa..a9` | 10.0          | 4.3%    | 107          | 4.28%    |
+| `0x13..EB` | 10.0          | 4.3%    | 99           | 3.96%    |
+| `Total`    | `230.0`       | `100%`  | `2500`       | `100%`   |
 
-## More Information
+This is the result for 2500 blocks. It was observed that when performed smaller tests, it resulted in inaccurate values of `%Result`. Higher the number of blocks, the `%Result` approaches `%Stake`.
 
-- You can customise to a specific `solc` version by doing `npm i solc@0.5.10`, but it's not recommended. Note: `solc@0.4.*` will not work with this template, because it has a different compile.js structure. It is recommended that you upgrade your smart contract code to be able to be compiled by a `solc@0.5.*` and above compiler. You can check out [breaking changes](https://solidity.readthedocs.io/en/v0.5.0/050-breaking-changes.html) in `0.5.*` and [breaking changes](https://solidity.readthedocs.io/en/v0.6.0/060-breaking-changes.html) in `0.6.*`and upgrade your smart contracts accordingly.
-- If something doesn't work, [file an issue here](https://github.com/zemse/create-solidity-project/issues/new).
+## Custom Tests
+
+1. `git clone https://github.com/zemse/pure-PoS-solidity.git`
+2. `cd pure-PoS-solidity`
+3. `npm i`
+4. If you want to flip staking amount values, just flip the numbers in `test/suites/Staking.test.ts` [Line #19](https://github.com/zemse/pure-PoS-solidity/blob/master/test/suites/Staking.test.ts#L17-L28)
+5. `npm test`
