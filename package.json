@@ -4,6 +4,7 @@
   "description": "Enter project description",
   "scripts": {
     "compile": "node compile.js",
+    "build": "npm run compile",
     "test": "node compile.js && mocha -t 30000 -r ts-node/register test/index.ts",
     "deploy": "node deploy.js"
   },
