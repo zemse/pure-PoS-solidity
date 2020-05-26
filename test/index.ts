@@ -1,6 +1,6 @@
 import './global';
 import { startGanacheServer } from './server';
-import { Ganache, SimpleStorageContract } from './suites';
+import { Ganache, StakingContract } from './suites';
 
 let name = require('../package.json').name;
 if (name) {
@@ -28,7 +28,7 @@ describe(`${name} Test Cases`, () => {
   Ganache();
 
   // Add your test hooks between before and after hooks
-  SimpleStorageContract();
+  StakingContract();
 
   after(() => {
     // stopping development blockchain
