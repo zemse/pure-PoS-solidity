@@ -15,7 +15,11 @@ const stakingJSON = require('../../build/Staking_Staking.json');
 let stakingInstance: ethers.Contract;
 
 const stakingAmount: ethers.BigNumber = ethers.utils.parseEther('20');
-const numberOfStakings = 10;
+const NUMBER_OF_STAKINGS = 10;
+
+const TRIALS = 50;
+let trialCount = 0;
+const chanceCount: { [key: string]: number[] } = {};
 
 /// @dev this is another test case collection
 export const StakingContract = () =>
@@ -37,7 +41,7 @@ export const StakingContract = () =>
     });
 
     describe('Staking Functionality', async () => {
-      [...Array(numberOfStakings).keys()].forEach((i) => {
+      [...Array(NUMBER_OF_STAKINGS).keys()].forEach((i) => {
         it(`stake ${ethers.utils.formatEther(
           stakingAmount
         )} ETH from Account ${i} in the contract`, async () => {
@@ -46,13 +50,13 @@ export const StakingContract = () =>
           );
           await _stakingInstance.functions.stake({
             value: stakingAmount,
-        });
+          });
 
-        /// @dev now get the value at storage
-        const currentStakes = await stakingInstance.functions.getAllStakes();
+          /// @dev now get the value at storage
+          const currentStakes = await stakingInstance.functions.getAllStakes();
 
-        /// @dev then comparing with expectation value
-        assert.ok(
+          /// @dev then comparing with expectation value
+          assert.ok(
             currentStakes[i].amount.eq(stakingAmount),
             'staked amount should be correct in the contract storage'
           );
@@ -61,7 +65,7 @@ export const StakingContract = () =>
 
       it('number of stakings should be correct', async () => {
         const stakings = await stakingInstance.functions.getAllStakes();
-        assert.strictEqual(stakings.length, numberOfStakings);
+        assert.strictEqual(stakings.length, NUMBER_OF_STAKINGS);
       });
     });
 
@@ -77,7 +81,7 @@ export const StakingContract = () =>
         assert.ok(!rn0.eq(rn1), 'should not be equal');
       });
 
-      it(`sample 100 trials on same block hash`, async () => {
+      it(`sample 100 trials on getRandomValidator (same block hash)`, async () => {
         const counts: number[] = new Array(10).fill(0);
         const trials = 100;
         for (let i = 0; i < trials; i++) {
@@ -91,6 +95,55 @@ export const StakingContract = () =>
         counts.forEach((count) =>
           assert.ok(count > 0, 'each one should get a chance')
         );
+      });
+
+      [...Array(10).keys()].forEach((testNumber) => {
+        it(`calling updateValidators 100 times`, async () => {
+          await stakingInstance.functions.updateValidators();
+          // Object.values(chanceCount).forEach((val) => {
+          //   if (val) val[0] = 0;
+          // });
+
+          for (let i = 0; i < TRIALS; i++) {
+            await stakingInstance.functions.updateValidators();
+            const validatorSet: string[] = await stakingInstance.functions.getAllValidators();
+            // console.log(validatorSet);
+            validatorSet.forEach((address) => {
+              if (!(address in chanceCount)) {
+                chanceCount[address] = [];
+              }
+              while (chanceCount[address].length < testNumber + 1) {
+                chanceCount[address].push(0);
+              }
+              chanceCount[address][testNumber]++;
+            });
+          }
+          trialCount += TRIALS;
+
+          // Printing results
+          console.log(`Trials until now: ${trialCount}`);
+          Object.entries(chanceCount).forEach((entry) => {
+            console.log(
+              `${entry[0]}: ${entry[1].join(' ')} = ${entry[1].reduce(
+                (total, num) => total + num,
+                0
+              )}`
+            );
+          });
+
+          const lastValidatorUpdatedBlock = await stakingInstance.functions.astValidatorUpdatedBlock();
+          const currentBlock = await global.provider.getBlockNumber();
+          assert.ok(
+            lastValidatorUpdatedBlock.eq(currentBlock),
+            'lastValidatorUpdatedBlock should be updated'
+          );
+          Object.entries(chanceCount).forEach((entry) => {
+            assert.ok(
+              entry[1][testNumber] > 0,
+              'should have mined at least one block'
+            );
+          });
+        });
       });
     });
   });
