@@ -7,14 +7,14 @@ contract Staking {
   struct Stake {
     address staker;
     uint256 amount;
-    uint256 adjusted;
+    uint256 adjusted; /// @dev adjusted staking amount which will be considered for PoS
   }
 
   Stake[] public stakes;
   uint256 public totalAdjusted;
 
   uint256 public lastValidatorUpdatedBlock;
-  uint256 public blocksInterval = 1;
+  uint256 public blocksInterval = 1; /// @dev interval for calling updateValidators repeatedly
   address[5] public validatorSet;
 
   event StakeAdded(uint256 _id);
@@ -38,6 +38,7 @@ contract Staking {
     emit StakeAdded(_stakeId);
   }
 
+  // TODO: move to another contract
   function updateValidators() public {
     require(blocksInterval + lastValidatorUpdatedBlock <= block.number, 'cannot update validators too early');
 
@@ -75,11 +76,14 @@ contract Staking {
     return validatorSet;
   }
 
+  // TODO: move to random number contract
   function randomNumber(uint256 _seed) public view returns (uint256) {
     return uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), _seed)));
   }
 
   function adjust(uint256 _amount) public pure returns (uint256) {
+    // TODO: add a quadratic adjustment (should be designed based on
+    //  currency total supply and expected staking supply)
     return _amount;
   }
 }
