@@ -93,11 +93,11 @@ export const StakingContract = () =>
         assert.ok(!rn0.eq(rn1), 'should not be equal');
       });
 
-      it(`sample 100 trials on getRandomValidator (same block hash)`, async () => {
+      it(`sample 100 trials on geLuckyStakeIndex (same block hash)`, async () => {
         const counts: number[] = new Array(10).fill(0);
         const trials = 100;
         for (let i = 0; i < trials; i++) {
-          const index: ethers.BigNumber = await stakingInstance.functions.getRandomValidator(
+          const index: ethers.BigNumber = await stakingInstance.functions.geLuckyStakeIndex(
             i
           );
           counts[index.toNumber()]++;

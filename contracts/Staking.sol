@@ -44,14 +44,18 @@ contract Staking {
     address[5] memory _newValidatorSet;
 
     for(uint256 i = 0; i < 5; i++) {
-      _newValidatorSet[i] = stakes[getRandomValidator(i)].staker;
+      _newValidatorSet[i] = getLuckyStake(i).staker;
     }
 
     validatorSet = _newValidatorSet;
     lastValidatorUpdatedBlock = block.number;
   }
 
-  function getRandomValidator(uint256 _seed) public view returns (uint256) {
+  function getLuckyStake(uint256 _seed) public view returns (Stake memory) {
+    return stakes[geLuckyStakeIndex(_seed)];
+  }
+
+  function geLuckyStakeIndex(uint256 _seed) public view returns (uint256) {
     int256 _luckyStake = int256(randomNumber(_seed) % totalAdjusted);
 
     uint256 i = 0;
